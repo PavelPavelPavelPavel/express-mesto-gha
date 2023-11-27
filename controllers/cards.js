@@ -94,7 +94,6 @@ function dislikeCard(req, res) {
       { new: true }
     )
     .then((like) => {
-      console.log(like);
       return res.status(201).send(like);
     })
     .catch((err) => {
