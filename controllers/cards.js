@@ -9,7 +9,6 @@ function getAllCards(req, res) {
   return cardModel
     .find()
     .then((cards) => {
-      console.log(cards);
       return res.status(200).send(cards);
     })
     .catch((err) => {
@@ -29,7 +28,7 @@ function createCard(req, res) {
     })
     .then((card) => {
       if (card) {
-        return res.status(201).send(`message: ${card}`);
+        return res.status(201).send(card);
       }
     })
     .catch((err) => {
@@ -46,7 +45,7 @@ function deleteCard(req, res) {
     .findByIdAndDelete(cardId)
     .then((card) => {
       if (card) {
-        return res.status(200).send("message: Карточка удалена");
+        return res.status(200).send(card);
       }
       return setDataNotFound("Карточка не найдена", (err = ""), res);
     })

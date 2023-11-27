@@ -10,7 +10,6 @@ function getAllUsers(req, res) {
     .find()
     .then((users) => {
       if (users) {
-        console.log(users);
         return res.status(200).send(users);
       }
     })
