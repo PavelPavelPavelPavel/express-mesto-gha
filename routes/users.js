@@ -4,15 +4,7 @@ const userController = require("../controllers/users");
 usersRouter.get("/", userController.getAllUsers);
 usersRouter.get("/users/:userId", userController.getUser);
 usersRouter.post("/users", userController.createUser);
-// router.get("/users", (req, res) => {
-//   console.log("express GET");
-//   console.log(res.status);
-// });
-// router.get("/users/:userId", (req, res) => {
-//   console.log("express GET User");
-// });
-// router.post("/users", (req, res) => {
-//   console.log("express POST");
-// });
+usersRouter.patch("/users/me", userController.updateUserInfo);
+usersRouter.patch("/users/me/avatar", userController.updateUserAvatar);
 
 module.exports = usersRouter;
