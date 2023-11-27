@@ -1,4 +1,9 @@
 const cardModel = require("../models/card");
+const {
+  setDataNotFound,
+  setServerError,
+  setWrongData,
+} = require("../errors/errors");
 
 function getAllCards(req, res) {
   return cardModel
@@ -8,8 +13,7 @@ function getAllCards(req, res) {
       return res.status(200).send(cards);
     })
     .catch((err) => {
-      console.log(err.message);
-      res.status(500).send("Server Error");
+      return setServerError(err);
     });
 }
 
@@ -25,14 +29,14 @@ function createCard(req, res) {
     })
     .then((card) => {
       if (card) {
-        return res.status(201).send(card);
+        return res.status(201).send(`message: ${card}`);
       }
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return res.status(400).send(err.message);
+        return setWrongData(err, res);
       }
-      return res.status(500).send("Server Error");
+      return setServerError(err, res);
     });
 }
 
@@ -42,25 +46,62 @@ function deleteCard(req, res) {
     .findByIdAndDelete(cardId)
     .then((card) => {
       if (card) {
-        console.log("deleted from DB");
-        return res.status(200).send(card);
+        return res.status(200).send("message: Карточка удалена");
       }
-      console.log("Карточка с таким ID не найдена");
-      return res.status(404).send("Карточка с таким ID не найдена");
+      return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        console.log(err.name);
-        return res.status(400).send("Неверный формат ID");
+        return setWrongData(err, res);
       }
-      console.log(err.name);
-      return res.status(500).send("Server Error");
+      return setServerError(err, res);
     });
 }
 
-function likeCard(req, res) {}
+function likeCard(req, res) {
+  return cardModel
+    .findByIdAndUpdate(
+      req.params.cardId,
+      {
+        $addToSet: {
+          likes: req.user._id,
+        },
+      },
+      { new: true }
+    )
+    .then((like) => {
+      const likeId = like._id.toString();
+      if (req.params.cardId === likeId) {
+        return res.status(201).send(like);
+      }
+    })
+    .catch((err) => {
+      if (err.name === "CastError") {
+        return setDataNotFound("Карточка не найдена", err, res);
+      }
+      return setServerError(err, res);
+    });
+}
 
-function dislikeCard(req, res) {}
+function dislikeCard(req, res) {
+  return cardModel
+    .findByIdAndUpdate(
+      req.params.cardId,
+      {
+        $pull: {
+          likes: req.user._id,
+        },
+      },
+      { new: true }
+    )
+    .then((like) => {
+      console.log(like);
+      return res.status(201).send(like);
+    })
+    .catch((err) => {
+      return setServerError(err, res);
+    });
+}
 
 module.exports = {
   getAllCards,

@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx eslint",
-    "dev": "nodemon app.js"
+    "start": "react-scripts start",
+    "dev": "nodemon app.js",
+    "deploy": "gh-pages -d build"
   },
   "keywords": [],
   "author": "Pavel",

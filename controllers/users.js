@@ -1,3 +1,8 @@
+const {
+  setServerError,
+  setWrongData,
+  setDataNotFound,
+} = require("../errors/errors");
 const userModel = require("../models/user");
 
 function getAllUsers(req, res) {
@@ -10,8 +15,7 @@ function getAllUsers(req, res) {
       }
     })
     .catch((err) => {
-      console.log(err);
-      return res.status(500).send("Server error");
+      return setServerError(err, res);
     });
 }
 
@@ -23,15 +27,13 @@ function getUser(req, res) {
         console.log(user);
         return res.status(200).send(user);
       }
-      console.log("wrong ID");
-      return res.status(404).send("Пользователь с таким ID не найден");
+      return setDataNotFound("Пользователь не найден", (err = ""), res);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        console.log(err.message);
-        return res.status(400).send("Invaild Id");
+        return setWrongData(err, res);
       }
-      return res.status(500).send(err.name);
+      return setServerError(err, res);
     });
 }
 
@@ -46,16 +48,16 @@ function createUser(req, res) {
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return res.status(400).send(err.message);
+        return setWrongData(err, res);
       }
-      return res.status(500).send("Server Error");
+      return setServerError(err, res);
     });
 }
 
 function updateInfo(req, res) {
   const userId = req.user._id;
-  console.log(userId);
   const body = req.body;
+
   return userModel
     .findByIdAndUpdate(
       userId,
@@ -64,26 +66,28 @@ function updateInfo(req, res) {
           ...body,
         },
       },
-      { new: true }
+      { new: true, runValidators: true }
     )
     .then((user) => {
-      return res.status(200).send(user);
+      if (user) {
+        return res.status(200).send(user);
+      }
+      setDataNotFound("Пользователь не найден", (err = ""), res);
     })
     .catch((err) => {
-      if (err.name === "SyntaxError") {
-        console.log(res.message);
-        return res.status(400).send("Данные введены не верно");
+      if (err.name === "ValidationError") {
+        return setWrongData(err, res);
       }
-      return res.status(500).send("Server Error");
+      return setServerError(err, res);
     });
 }
 
 function updateUserInfo(req, res) {
-  updateInfo(req, res);
+  return updateInfo(req, res);
 }
 
 function updateUserAvatar(req, res) {
-  updateInfo(req, res);
+  return updateInfo(req, res);
 }
 
 module.exports = {
