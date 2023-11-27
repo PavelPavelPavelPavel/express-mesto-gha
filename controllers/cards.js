@@ -45,7 +45,7 @@ function deleteCard(req, res) {
     .findByIdAndDelete(cardId)
     .then((card) => {
       if (card) {
-        return res.status(204).send(card);
+        return res.status(200).send(card);
       }
       return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
@@ -95,7 +95,7 @@ function dislikeCard(req, res) {
     )
     .then((like) => {
       if (like) {
-        return res.status(201).send(like);
+        return res.status(200).send(like);
       }
       return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
