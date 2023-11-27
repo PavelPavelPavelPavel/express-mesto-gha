@@ -9,6 +9,7 @@ function getAllUsers(req, res) {
   return userModel
     .find()
     .then((users) => {
+      console.log(users);
       return res.status(200).send(users);
     })
     .catch((err) => {

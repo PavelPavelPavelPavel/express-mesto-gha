@@ -69,16 +69,16 @@ function likeCard(req, res) {
       { new: true }
     )
     .then((like) => {
-      const likeId = like._id.toString();
-      if (req.params.cardId === likeId) {
+      if (like) {
         return res.status(201).send(like);
       }
+      return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return setServerError(err, res);
+        return setWrongData(err, res);
       }
-      return setDataNotFound("Карточка не найдена", err, res);
+      return setServerError(err, res);
     });
 }
 
@@ -94,13 +94,16 @@ function dislikeCard(req, res) {
       { new: true }
     )
     .then((like) => {
-      return res.status(201).send(like);
+      if (like) {
+        return res.status(201).send(like);
+      }
+      return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return setServerError(err, res);
+        return setWrongData(err, res);
       }
-      return setDataNotFound("Карточка не найдена", err, res);
+      return setServerError(err, res);
     });
 }
 
