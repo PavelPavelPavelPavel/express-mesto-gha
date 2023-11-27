@@ -7,7 +7,7 @@ const userModel = require("../models/user");
 
 function getAllUsers(req, res) {
   return userModel
-    .find()
+    .find({})
     .then((users) => {
       return res.status(200).send(users);
     })
