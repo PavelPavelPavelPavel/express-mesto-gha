@@ -9,9 +9,7 @@ function getAllUsers(req, res) {
   return userModel
     .find()
     .then((users) => {
-      if (users) {
-        return res.status(200).send(users);
-      }
+      return res.status(200).send(users);
     })
     .catch((err) => {
       return setServerError(err, res);
@@ -23,7 +21,6 @@ function getUser(req, res) {
     .findById(`${req.params.userId}`)
     .then((user) => {
       if (user) {
-        console.log(user);
         return res.status(200).send(user);
       }
       return setDataNotFound("Пользователь не найден", (err = ""), res);

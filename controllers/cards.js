@@ -45,7 +45,7 @@ function deleteCard(req, res) {
     .findByIdAndDelete(cardId)
     .then((card) => {
       if (card) {
-        return res.status(200).send(card);
+        return res.status(204).send(card);
       }
       return setDataNotFound("Карточка не найдена", (err = ""), res);
     })
@@ -76,9 +76,9 @@ function likeCard(req, res) {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return setDataNotFound("Карточка не найдена", err, res);
+        return setServerError(err, res);
       }
-      return setServerError(err, res);
+      return setDataNotFound("Карточка не найдена", err, res);
     });
 }
 
@@ -97,7 +97,10 @@ function dislikeCard(req, res) {
       return res.status(201).send(like);
     })
     .catch((err) => {
-      return setServerError(err, res);
+      if (err.name === "CastError") {
+        return setServerError(err, res);
+      }
+      return setDataNotFound("Карточка не найдена", err, res);
     });
 }
 
