@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 const cardModel = require('../models/card');
 const {
   setDataNotFound,
@@ -22,11 +23,7 @@ function createCard(req, res) {
       link: cardData.link,
       owner: userId,
     })
-    .then((card) => {
-      if (card) {
-        return res.status(201).send(card);
-      }
-    })
+    .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return setWrongData(err, res);
@@ -39,11 +36,12 @@ function deleteCard(req, res) {
   const { cardId } = req.params;
   return cardModel
     .findByIdAndDelete(cardId)
+    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (card) {
         return res.send(card);
       }
-      setDataNotFound('Карточка не найдена', (err = ''), res);
+      setDataNotFound('Карточка не найдена', res);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -68,7 +66,7 @@ function likeCard(req, res) {
       if (like) {
         return res.send(like);
       }
-      setDataNotFound('Карточка не найдена', (err = ''), res);
+      setDataNotFound('Карточка не найдена', res);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -93,7 +91,7 @@ function dislikeCard(req, res) {
       if (like) {
         return res.send(like);
       }
-      return setDataNotFound('Карточка не найдена', (err = ''), res);
+      setDataNotFound('Карточка не найдена', res);
     })
     .catch((err) => {
       if (err.name === 'CastError') {

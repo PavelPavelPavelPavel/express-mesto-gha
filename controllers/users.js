@@ -15,11 +15,12 @@ function getAllUsers(req, res) {
 function getUser(req, res) {
   return userModel
     .findById(`${req.params.userId}`)
+    // eslint-disable-next-line consistent-return
     .then((user) => {
       if (user) {
         return res.send(user);
       }
-      setDataNotFound('Пользователь не найден', (err = ''), res);
+      setDataNotFound('Пользователь не найден', res);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -33,11 +34,7 @@ function createUser(req, res) {
   const userData = req.body;
   return userModel
     .create(userData)
-    .then((user) => {
-      if (user) {
-        return res.status(201).send(user);
-      }
-    })
+    .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return setWrongData(err, res);
@@ -64,7 +61,7 @@ function updateInfo(req, res) {
       if (user) {
         return res.send(user);
       }
-      setDataNotFound('Пользователь не найден', (err = ''), res);
+      return setDataNotFound('Пользователь не найден', res);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
