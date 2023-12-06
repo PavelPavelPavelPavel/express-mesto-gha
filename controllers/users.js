@@ -6,12 +6,13 @@ const {
   setDataNotFound,
   // setWrongEmailOfPassError,
 } = require('../errors/errors');
+const { SALT, KEY_FOR_TOKEN } = require('../utils/config');
 const userModel = require('../models/user');
 
-const SALT = 10;
-const KEY_FOR_TOKEN = 'abrakadabra123';
 const createToken = (id) => {
-  return jwt.sign({_id: id}, KEY_FOR_TOKEN);
+  return jwt.sign({ _id: id }, KEY_FOR_TOKEN, {
+    expiresIn: 3600000 * 24 * 7
+  });
 };
 
 function getAllUsers(req, res) {
@@ -21,7 +22,7 @@ function getAllUsers(req, res) {
     .catch((err) => setServerError(err, res));
 }
 
-function getUser(req, res) {
+function getUserById(req, res) {
   return userModel
     .findById(`${req.params.userId}`)
     // eslint-disable-next-line consistent-return
@@ -46,24 +47,23 @@ function createUser(req, res) {
     return res.status(400).send({ message: 'Email and password are required' });
   }
   return bcrypt.hash(password, SALT)
-    .then((hash) => userModel
-      .create({ email, password: hash, ...userData })
-      .then((user) => {
-        // eslint-disable-next-line no-shadow
-        const { name, email } = user;
-        return res
-          .status(201)
-          .send({ name, email });
-      }))
+    .then((hash) =>
+      userModel
+        .create({ email, password: hash, ...userData })
+        .then((user) => {
+          // eslint-disable-next-line no-shadow
+          const { name, email, password } = user;
+          return res
+            .status(201)
+            .send({ name, email });
+        }))
     .catch((err) => {
+      if (err.name === "MongoServerError") {
+        return res.status(401).send({ message: "User already rigistered" })
+      }
       if (err.name === 'ValidationError') {
         return setWrongData(err, res);
       }
-      // if (err.name === 'MongoServerError' && err.code === 'E11000') {
-      //   return setWrongEmailOfPassError(err, res);
-      // }
-      console.log(err.name);
-      console.log(err.message);
       return setServerError(err, res);
     });
 }
@@ -96,38 +96,49 @@ function updateInfo(req, res) {
     });
 }
 
-function login (req, res) {
+function login(req, res) {
   const { email, password } = req.body;
 
-  if(!email || !password) {
+  if (!email || !password) {
     return res.status(400).send({ message: 'Email and password are required' });
   }
- return userModel.findOne({email})
- .then(user => {
-    if(!user) {
-      return res.status(404).send({message: 'Неверный имейл или пароль'})
-    }
-    return bcrypt.compare(password, user.password, function(err, isMatch) {
-      if(err) {
-        throw err;
+  return userModel.findOne({ email }).select('+password')
+    .then(user => {
+      if (!user) {
+        return res.status(401).send({ message: 'Неверный имейл или пароль' })
       }
-      if(!isMatch) {
-        return res.status(404).send({message: 'Неверный имейл или пароль'})
+      bcrypt.compare(password, user.password, function (err, isMatch) {
+        if (err) {
+          throw err;
+        }
+        if (!isMatch) {
+          return res.status(401).send({ message: 'Неверный имейл или пароль' })
+        }
+        return res.send({ token: createToken(user._id) })
       }
-     return res.cookie('token', {token: createToken(user._id)}, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-      })
-      .end();
-     }
-    )
- })
- .catch(err => {
-    return setServerError(err, res);
- })
+      )
+    })
+    .catch(err => {
+      return setServerError(err, res);
+    })
+}
 
-
-
+function getUserInfo(req, res) {
+  const userId = req.user._id;
+  if (!userId) {
+    return setDataNotFound('Пользователь не найден', res);
+  }
+  return userModel.findById(userId)
+    .then(user => {
+      if (!user) {
+        return setDataNotFound('Пользователь не найден', res);
+      }
+      const { name, about, avatar, email } = user;
+      return res.send({ name, about, avatar, email })
+    })
+    .catch(err => {
+      return setServerError(err, res);
+    })
 }
 
 function updateUserInfo(req, res) {
@@ -139,11 +150,14 @@ function updateUserAvatar(req, res) {
 }
 
 
+
+
 module.exports = {
   getAllUsers,
-  getUser,
+  getUserById,
   createUser,
   updateUserInfo,
   updateUserAvatar,
-  login
+  login,
+  getUserInfo
 };
