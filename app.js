@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const appRouter = require('./routes');
 
 
 
@@ -13,12 +14,13 @@ const {
   PORT = 3000,
 } = process.env;
 const { checkServer } = require('./utils/responseCheck');
-const appRouter = require('./routes');
 
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(appRouter);
+
+
 
 app.listen(PORT, () => {
   checkServer(PORT);

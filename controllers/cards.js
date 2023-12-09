@@ -1,19 +1,19 @@
 /* eslint-disable consistent-return */
 const cardModel = require('../models/card');
 const {
-  setDataNotFound,
-  setServerError,
-  setWrongData,
-} = require('../errors/errors');
+  NotFoundError,
+  ForbidenError,
+  DataError,
+} = require('../errors');
 
-function getAllCards(req, res) {
+function getAllCards(req, res, next) {
   return cardModel
     .find()
     .then((cards) => res.send(cards))
-    .catch((err) => setServerError(err));
+    .catch(err => next(err));
 }
 
-function createCard(req, res) {
+function createCard(req, res, next) {
   const cardData = req.body;
   const userId = req.user._id;
 
@@ -26,79 +26,71 @@ function createCard(req, res) {
     .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return setWrongData(err, res);
+        next(new DataError("Введены некорректные данные"))
       }
-      return setServerError(err, res);
     });
 }
 
-function deleteCard(req, res) {
+function deleteCard(req, res, next) {
+  const userId = req.user._id;
   const { cardId } = req.params;
-  return cardModel
-    .findByIdAndDelete(cardId)
-    // eslint-disable-next-line consistent-return
-    .then((card) => {
-      if (card) {
-        return res.send(card);
+  cardModel.findById(cardId)
+    .then(card => {
+      if (!card) {
+        next(new NotFoundError("Карточка не найдена"))
       }
-      setDataNotFound('Карточка не найдена', res);
+      if (card.owner.toString() !== userId.toString()) {
+        next(new ForbidenError("Нет доступа"))
+      }
+      return cardModel
+        .findByIdAndDelete(cardId)
+        // eslint-disable-next-line consistent-return
+        .then((card) => {
+          return res.send({ message: `Deleted: ${card._id}` })
+        })
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return setWrongData(err, res);
+        next(new DataError("Введены некорректные данные"))
       }
-      return setServerError(err, res);
     });
 }
 
-function likeCard(req, res) {
+function handlerLikes(req, res, next, findOption) {
   return cardModel
     .findByIdAndUpdate(
       req.params.cardId,
-      {
-        $addToSet: {
-          likes: req.user._id,
-        },
-      },
+      findOption,
       { new: true },
     )
     .then((like) => {
-      if (like) {
-        return res.send(like);
+      if (!like) {
+        next(new NotFoundError("Карточка не найдена"))
       }
-      setDataNotFound('Карточка не найдена', res);
+      return res.send(like);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return setWrongData(err, res);
+        next(new DataError("Введены некорректные данные"))
       }
-      return setServerError(err, res);
     });
 }
 
-function dislikeCard(req, res) {
-  return cardModel
-    .findByIdAndUpdate(
-      req.params.cardId,
-      {
-        $pull: {
-          likes: req.user._id,
-        },
-      },
-      { new: true },
-    )
-    .then((like) => {
-      if (like) {
-        return res.send(like);
-      }
-      setDataNotFound('Карточка не найдена', res);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return setWrongData(err, res);
-      }
-      return setServerError(err, res);
-    });
+
+function likeCard(req, res, next) {
+  handlerLikes(req, res, next, {
+    $addToSet: {
+      likes: req.user._id,
+    },
+  })
+}
+
+function dislikeCard(req, res, next) {
+  handlerLikes(req, res, next, {
+    $pull: {
+      likes: req.user._id,
+    },
+  })
 }
 
 module.exports = {

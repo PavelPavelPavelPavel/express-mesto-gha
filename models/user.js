@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-
+const avatarRegex = /(http(s?)\:\/\/)(w{3}\.)?([\w\d\W\D]*)(\w?)[#]?/
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -19,7 +19,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
       validate: {
-        validator: (v) => validator.isURL(v),
+        validator: function (v) {
+          return avatarRegex.test(v)
+        },
         message: 'Некорректный URL',
       },
     },
@@ -28,7 +30,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       validate: {
-        validator: (v) => validator.isEmail(v),
+        validator: (v) => validator.isURL(v),
         message: 'Некорректный Email',
       },
     },
