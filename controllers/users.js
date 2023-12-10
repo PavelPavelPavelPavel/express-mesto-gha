@@ -18,7 +18,7 @@ function getAllUsers(req, res, next) {
     .find()
     .then((users) => {
       if (!users) {
-        next();
+        next(new NotFoundError('Пользователи не найдены'));
       }
       res.send(users);
     })
@@ -37,7 +37,7 @@ function getUserById(req, res, next) {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError('Неверный ID'));
+        next(new NotFoundError('Пользователь не найден'));
       }
       next(err);
     });

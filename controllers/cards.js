@@ -10,7 +10,12 @@ const {
 function getAllCards(req, res, next) {
   return cardModel
     .find()
-    .then((cards) => res.send(cards))
+    .then((cards) => {
+      if (!cards) {
+        next(new NotFoundError('Карточки не найдены'));
+      }
+      res.send(cards);
+    })
     .catch((err) => next(err));
 }
 
@@ -70,7 +75,7 @@ function handlerLikes(req, res, next, findOption) {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError('Введены некорректные данные'));
+        next(new NotFoundError('Карточка не найдена'));
       }
     });
 }

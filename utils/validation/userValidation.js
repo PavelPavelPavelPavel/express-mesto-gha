@@ -16,7 +16,22 @@ const validateLogin = celebrate({
   }).unknown(true),
 });
 
+const validateUpdateUserAvatar = celebrate({
+  body: Joi.object().keys({
+    avatar: Joi.string(),
+  }).unknown(true),
+});
+
+const validateUpdateUserInfo = celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+  }).unknown(true),
+});
+
 module.exports = {
   validateCreateUser,
   validateLogin,
+  validateUpdateUserAvatar,
+  validateUpdateUserInfo,
 };
