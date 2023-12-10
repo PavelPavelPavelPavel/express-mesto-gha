@@ -6,7 +6,7 @@ const validateCreateCard = celebrate({
   }).unknown(true),
 });
 
-const validateLikeCard = celebrate({
+const validateIdCard = celebrate({
   params: Joi.object().keys({
     cardId: Joi.string().required().pattern(/^(\w){24}$/),
   }),
@@ -14,5 +14,5 @@ const validateLikeCard = celebrate({
 
 module.exports = {
   validateCreateCard,
-  validateLikeCard,
+  validateIdCard,
 };

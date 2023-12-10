@@ -9,12 +9,12 @@ const {
 
 function getAllCards(req, res, next) {
   return cardModel
-    .find()
+    .find({})
     .then((cards) => {
-      if (!cards) {
-        next(new NotFoundError('Карточки не найдены'));
+      if (cards) {
+        return res.send(cards);
       }
-      res.send(cards);
+      next(new NotFoundError('Карточки не найдены'));
     })
     .catch((err) => next(err));
 }
@@ -45,13 +45,13 @@ function deleteCard(req, res, next) {
       if (!card) {
         next(new NotFoundError('Карточка не найдена'));
       }
-      if (card.owner.toString() !== userId.toString()) {
-        next(new ForbidenError('Нет доступа'));
+      if (card.owner.toString() === userId.toString()) {
+        return cardModel
+          .findByIdAndDelete(cardId)
+          // eslint-disable-next-line consistent-return
+          .then((card) => res.send({ message: `Deleted: ${card._id}` }));
       }
-      return cardModel
-        .findByIdAndDelete(cardId)
-        // eslint-disable-next-line consistent-return
-        .then((card) => res.send({ message: `Deleted: ${card._id}` }));
+      next(new ForbidenError('Нет доступа'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -68,10 +68,10 @@ function handlerLikes(req, res, next, findOption) {
       { new: true },
     )
     .then((like) => {
-      if (!like) {
-        next(new NotFoundError('Карточка не найдена'));
+      if (like) {
+        return res.status(200).send(like);
       }
-      return res.send(like);
+      next(new NotFoundError('Карточка не найдена'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {

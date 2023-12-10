@@ -20,7 +20,7 @@ function getAllUsers(req, res, next) {
       if (!users) {
         next(new NotFoundError('Пользователи не найдены'));
       }
-      res.send(users);
+      res.status(200).send(users);
     })
     .catch(next);
 }
@@ -54,10 +54,15 @@ function createUser(req, res, next) {
       .create({ email, password: hash, ...userData })
       .then((user) => {
         // eslint-disable-next-line no-shadow
-        const { name, email } = user;
+        const {
+          // eslint-disable-next-line no-shadow
+          name, email, avatar, about,
+        } = user;
         return res
           .status(201)
-          .send({ name, email });
+          .send({
+            name, about, avatar, email,
+          });
       }))
     .catch((err) => {
       if (err.name === 'MongoServerError' && err.code === 11000) {
@@ -78,7 +83,7 @@ function login(req, res, next) {
   return userModel.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        next(new DataError('Поля имейл или пароль заполнены неверно'));
+        next(new AuthError('Нет доступа'));
       }
       // eslint-disable-next-line consistent-return
       bcrypt.compare(password, user.password, (err, isMatch) => {
@@ -101,13 +106,13 @@ function getUserInfo(req, res, next) {
   }
   return userModel.findById(userId)
     .then((user) => {
-      if (!user) {
-        next(new NotFoundError('Пользователь не найден'));
-      }
       const {
         _id, name, about, avatar, email,
       } = user;
-      return res.send({
+      if (!user) {
+        next(new NotFoundError('Пользователь не найден'));
+      }
+      return res.status(200).send({
         _id, name, about, avatar, email,
       });
     })
@@ -132,7 +137,7 @@ function updateInfo(req, res, next) {
       if (!user) {
         next(new NotFoundError('Пользователь не найден'));
       }
-      return res.send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
