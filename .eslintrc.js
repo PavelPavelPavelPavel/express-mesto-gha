@@ -21,14 +21,11 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  rules: [{
-    'no-underscore-dangle': ['error', { allow: ['_id'] }],
+  rules: {
+    'no-underscore-dangle': [
+      'error',
+      {
+        allow: ['_id'],
+      }],
   },
-  {
-    "import/no-extraneous-dependencies": [
-      "error",
-      { "devDependencies": true }
-    ]
-  }
-  ]
 };

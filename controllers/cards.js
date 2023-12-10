@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 /* eslint-disable consistent-return */
 const cardModel = require('../models/card');
 const {
@@ -10,7 +11,7 @@ function getAllCards(req, res, next) {
   return cardModel
     .find()
     .then((cards) => res.send(cards))
-    .catch(err => next(err));
+    .catch((err) => next(err));
 }
 
 function createCard(req, res, next) {
@@ -26,7 +27,7 @@ function createCard(req, res, next) {
     .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new DataError("Введены некорректные данные"))
+        next(new DataError('Введены некорректные данные'));
       }
     });
 }
@@ -34,24 +35,22 @@ function createCard(req, res, next) {
 function deleteCard(req, res, next) {
   const userId = req.user._id;
   const { cardId } = req.params;
-  cardModel.findById(cardId)
-    .then(card => {
+  return cardModel.findById(cardId)
+    .then((card) => {
       if (!card) {
-        next(new NotFoundError("Карточка не найдена"))
+        next(new NotFoundError('Карточка не найдена'));
       }
       if (card.owner.toString() !== userId.toString()) {
-        next(new ForbidenError("Нет доступа"))
+        next(new ForbidenError('Нет доступа'));
       }
       return cardModel
         .findByIdAndDelete(cardId)
         // eslint-disable-next-line consistent-return
-        .then((card) => {
-          return res.send({ message: `Deleted: ${card._id}` })
-        })
+        .then((card) => res.send({ message: `Deleted: ${card._id}` }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError("Введены некорректные данные"))
+        next(new DataError('Введены некорректные данные'));
       }
     });
 }
@@ -65,24 +64,23 @@ function handlerLikes(req, res, next, findOption) {
     )
     .then((like) => {
       if (!like) {
-        next(new NotFoundError("Карточка не найдена"))
+        next(new NotFoundError('Карточка не найдена'));
       }
       return res.send(like);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError("Введены некорректные данные"))
+        next(new DataError('Введены некорректные данные'));
       }
     });
 }
-
 
 function likeCard(req, res, next) {
   handlerLikes(req, res, next, {
     $addToSet: {
       likes: req.user._id,
     },
-  })
+  });
 }
 
 function dislikeCard(req, res, next) {
@@ -90,7 +88,7 @@ function dislikeCard(req, res, next) {
     $pull: {
       likes: req.user._id,
     },
-  })
+  });
 }
 
 module.exports = {
