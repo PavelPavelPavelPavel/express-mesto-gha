@@ -1,10 +1,13 @@
 const { celebrate, Joi } = require('celebrate');
 
+const avatarValidation = /(http(s?):\/\/)(w{3}\.)?([\w\d\W\D]*)(\w?)[#]?/;
+const idValidation = /^(\w){24}$/;
+
 const validateCreateUser = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/(http(s?):\/\/)(w{3}\.)?([\w\d\W\D]*)(\w?)[#]?/),
+    avatar: Joi.string().pattern(avatarValidation),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }).unknown(true),
@@ -19,7 +22,7 @@ const validateLogin = celebrate({
 
 const validateUserAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().pattern(/(http(s?):\/\/)(w{3}\.)?([\w\d\W\D]*)(\w?)[#]?/),
+    avatar: Joi.string().pattern(avatarValidation),
   }).unknown(true),
 });
 
@@ -32,7 +35,7 @@ const validateUpdateUserInfo = celebrate({
 
 const validateIdUser = celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().required().pattern(/^(\w){24}$/),
+    userId: Joi.string().required().pattern(idValidation),
   }),
 });
 
@@ -42,4 +45,5 @@ module.exports = {
   validateUserAvatar,
   validateUpdateUserInfo,
   validateIdUser,
+  idValidation,
 };
