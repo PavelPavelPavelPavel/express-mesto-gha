@@ -14,7 +14,7 @@ function getAllCards(req, res, next) {
       if (cards) {
         return res.send(cards);
       }
-      next(new NotFoundError('Карточки не найдены'));
+      return next(new NotFoundError('Карточки не найдены'));
     })
     .catch((err) => next(err));
 }
@@ -32,7 +32,7 @@ function createCard(req, res, next) {
     .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new DataError('Введены некорректные данные'));
+        return next(new DataError('Введены некорректные данные'));
       }
     });
 }
@@ -43,20 +43,21 @@ function deleteCard(req, res, next) {
   return cardModel.findById(cardId)
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('Карточка не найдена'));
+        return next(new NotFoundError('Карточка не найдена'));
       }
       if (card.owner.toString() === userId.toString()) {
         return cardModel
-          .findByIdAndDelete(cardId)
+          .deleteOne(cardId)
           // eslint-disable-next-line consistent-return
           .then((card) => res.send({ message: `Deleted: ${card._id}` }));
       }
-      next(new ForbidenError('Нет доступа'));
+      return next(new ForbidenError('Нет доступа'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError('Введены некорректные данные'));
+        return next(new DataError('Введены некорректные данные'));
       }
+      return next(err);
     });
 }
 
@@ -71,12 +72,13 @@ function handlerLikes(req, res, next, findOption) {
       if (like) {
         return res.status(200).send(like);
       }
-      next(new NotFoundError('Карточка не найдена'));
+      return next(new NotFoundError('Карточка не найдена'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new NotFoundError('Карточка не найдена'));
+        return next(new NotFoundError('Карточка не найдена'));
       }
+      return next(err);
     });
 }
 

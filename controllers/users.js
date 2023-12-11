@@ -18,9 +18,9 @@ function getAllUsers(req, res, next) {
     .find()
     .then((users) => {
       if (!users) {
-        next(new NotFoundError('Пользователи не найдены'));
+        return next(new NotFoundError('Пользователи не найдены'));
       }
-      res.status(200).send(users);
+      return res.status(200).send(users);
     })
     .catch(next);
 }
@@ -37,9 +37,9 @@ function getUserById(req, res, next) {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
-      next(err);
+      return next(err);
     });
 }
 
@@ -47,7 +47,7 @@ function createUser(req, res, next) {
   const { email, password, ...userData } = req.body;
 
   if (!email || !password) {
-    next(new DataError('Поля имейл или пароль заполнены неверно'));
+    return next(new DataError('Поля имейл или пароль заполнены неверно'));
   }
   return bcrypt.hash(password, SALT)
     .then((hash) => userModel
@@ -66,11 +66,12 @@ function createUser(req, res, next) {
       }))
     .catch((err) => {
       if (err.name === 'MongoServerError' && err.code === 11000) {
-        next(new AlreadyExistsError('Пользователь уже существует'));
+        return next(new AlreadyExistsError('Пользователь уже существует'));
       }
       if (err.name === 'ValidationError') {
-        next(new DataError('Поля имейл или пароль заполнены неверно'));
+        return next(new DataError('Поля имейл или пароль заполнены неверно'));
       }
+      return next(err);
     });
 }
 
@@ -78,22 +79,23 @@ function login(req, res, next) {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    next(new DataError('Поля имейл или пароль заполнены неверно'));
+    return next(new DataError('Поля имейл или пароль заполнены неверно'));
   }
   return userModel.findOne({ email }).select('+password')
+    // eslint-disable-next-line consistent-return
     .then((user) => {
       if (!user) {
-        next(new AuthError('Нет доступа'));
+        return next(new AuthError('Нет доступа'));
       }
       // eslint-disable-next-line consistent-return
       bcrypt.compare(password, user.password, (err, isMatch) => {
         if (err) {
-          next(err);
+          return next(err);
         }
         if (isMatch) {
           return res.send({ token: createToken(user._id) });
         }
-        next(new AuthError('Нет доступа'));
+        return next(new AuthError('Нет доступа'));
       });
     })
     .catch(next);
@@ -102,7 +104,7 @@ function login(req, res, next) {
 function getUserInfo(req, res, next) {
   const userId = req.user._id;
   if (!userId) {
-    next(new NotFoundError('Пользователь не найден'));
+    return next(new NotFoundError('Пользователь не найден'));
   }
   return userModel.findById(userId)
     .then((user) => {
@@ -110,7 +112,7 @@ function getUserInfo(req, res, next) {
         _id, name, about, avatar, email,
       } = user;
       if (!user) {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
       return res.status(200).send({
         _id, name, about, avatar, email,
@@ -135,15 +137,15 @@ function updateInfo(req, res, next) {
     )
     .then((user) => {
       if (!user) {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new DataError('Введены некорректные данные'));
+        return next(new DataError('Введены некорректные данные'));
       }
-      next(err);
+      return next(err);
     });
 }
 
