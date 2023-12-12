@@ -34,6 +34,7 @@ function createCard(req, res, next) {
       if (err.name === 'ValidationError') {
         return next(new DataError('Введены некорректные данные'));
       }
+      return next(err);
     });
 }
 
