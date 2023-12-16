@@ -20,7 +20,7 @@ function getAllUsers(req, res, next) {
       if (!users) {
         return next(new NotFoundError('Пользователи не найдены'));
       }
-      return res.status(200).send(users);
+      return res.send(users);
     })
     .catch(next);
 }
@@ -114,7 +114,7 @@ function getUserInfo(req, res, next) {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(200).send({
+      return res.send({
         _id, name, about, avatar, email,
       });
     })
@@ -139,7 +139,7 @@ function updateInfo(req, res, next) {
       if (!user) {
         return next(new NotFoundError('Пользователь не найден'));
       }
-      return res.status(200).send(user);
+      return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
